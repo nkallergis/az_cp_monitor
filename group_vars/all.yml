@@ -1,0 +1,12 @@
+---
+customer: "alpha"
+location: "westeurope"
+cp_primary_backend: "10.118.6.4"
+cp_secondary_backend: "10.118.6.5"
+vnet:
+  prefix: "10.118.0.0/16"
+  subnets:
+    - name: "server"
+      prefix: "10.118.7.0/24"
+    - name: "alphanet"
+      prefix: "10.118.9.0/24"

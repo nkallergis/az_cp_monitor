@@ -1,0 +1,24 @@
+---
+- name: Check Point "fail-over" in Azure Stack
+  hosts: subnets
+  gather_facts: False
+  tasks:
+  - name: Change UDR routes (VNet) - point to secondary CP
+    delegate_to: localhost
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{inventory_hostname}}-udr"
+      name: "{{inventory_hostname}}-vnet"
+      address_prefix: "{{vnet.prefix}}"
+      next_hop_type: "virtual_appliance"
+      next_hop_ip_address: "{{cp_secondary_backend}}"
+
+  - name: Change UDR routes (default) - point to secondary CP
+    delegate_to: localhost
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{inventory_hostname}}-udr"
+      name: "{{inventory_hostname}}-default"
+      address_prefix: "0.0.0.0/0"
+      next_hop_type: "virtual_appliance"
+      next_hop_ip_address: "{{cp_secondary_backend}}"

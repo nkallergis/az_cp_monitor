@@ -1,0 +1,73 @@
+---
+- name: Create Check Point "HA pair" in Azure Stack
+  hosts: localhost
+  gather_facts: False
+  connection: local
+  tasks:
+  - name: Create generic resource group
+    run_once: True
+    azure_rm_resourcegroup:
+      name: "{{customer}}-generic-rg"
+      location: "{{location}}"
+      
+  - name: Create per-host resource groups
+    azure_rm_resourcegroup:
+      name: "{{customer}}-{{inventory_hostname}}-rg"
+      location: "{{location}}"
+    
+  - name: Create Vnets
+    run_once: True
+    azure_rm_virtualnetwork:
+      resource_group: "{{customer}}-generic-rg"
+      name: "{{customer}}-vnet"
+      address_prefixes_cidr: "{{vnet.prefix}}"
+  
+  - name: Create UDR route tables
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_routetable:
+      resource_group: "{{customer}}-generic-rg"
+      name: "{{item.name}}-udr"
+      disable_bgp_route_propagation: True
+
+  - name: Create UDR routes (local)
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{item.name}}-udr"
+      name: "{{item.name}}-local"
+      address_prefix: "{{item.prefix}}"
+      next_hop_type: "vnet_local"
+
+  - name: Create UDR routes (VNet)
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{item.name}}-udr"
+      name: "{{item.name}}-vnet"
+      address_prefix: "{{vnet.prefix}}"
+      next_hop_type: "virtual_appliance"
+      next_hop_ip_address: "{{cp_primary_backend}}"
+
+  - name: Create UDR routes (default)
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{item.name}}-udr"
+      name: "{{item.name}}-default"
+      address_prefix: "0.0.0.0/0"
+      next_hop_type: "virtual_appliance"
+      next_hop_ip_address: "{{cp_primary_backend}}"
+
+  - name: Create subnets
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_subnet:
+      resource_group: "{{customer}}-generic-rg"
+      virtual_network_name: "{{customer}}-vnet"
+      name: "{{item.name}}"
+      address_prefix_cidr: "{{item.prefix}}"
+      route_table: "{{item.name}}-udr"

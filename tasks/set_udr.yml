@@ -1,0 +1,19 @@
+- name: Set UDRs (VNet)
+  delegate_to: localhost
+  azure_rm_route:
+    resource_group: "{{customer}}-generic-rg"
+    route_table_name: "{{inventory_hostname}}-udr"
+    name: "{{inventory_hostname}}-vnet"
+    address_prefix: "{{vnet.prefix}}"
+    next_hop_type: "virtual_appliance"
+    next_hop_ip_address: "{{gateway}}"
+
+- name: Set UDRs (default)
+  delegate_to: localhost
+  azure_rm_route:
+    resource_group: "{{customer}}-generic-rg"
+    route_table_name: "{{inventory_hostname}}-udr"
+    name: "{{inventory_hostname}}-default"
+    address_prefix: "0.0.0.0/0"
+    next_hop_type: "virtual_appliance"
+    next_hop_ip_address: "{{gateway}}"

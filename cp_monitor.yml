@@ -1,0 +1,42 @@
+---
+- name: Check Point "HA" monitoring in Azure Stack
+  hosts: subnets
+  gather_facts: False
+  vars: 
+    target:
+      ip: "10.118.250.4"
+      port: "22"
+      timeout: "15"
+
+  tasks:
+  - name: Check if primary CP is functioning well
+    run_once: True
+    delegate_to: localhost
+    ignore_errors: True
+    wait_for:
+      host: "{{target.ip}}"
+      port: "{{target.port}}"
+      timeout: "{{target.timeout}}"
+      state: "present"
+    register: output
+
+  - name: Print result
+    run_once: True
+    delegate_to: localhost
+    debug:
+      msg: "Check failed: {{output.failed}}"
+
+  ##### IF CHECK SUCCEEDS, POINT UDRs TO PRIMARY CHECK POINT GATEWAY #####
+  - name: Point UDRs to primary Check Point
+    when: not output.failed
+    include_tasks: "tasks/set_udr.yml"
+    vars:
+      gateway: "{{cp_primary_backend}}"
+
+
+  ##### IF CHECK FAILS, POINT UDRs TO SECONDARY CHECK POINT GATEWAY #####
+  - name: Point UDRs to secondary Check Point
+    when: output.failed
+    include_tasks: "tasks/set_udr.yml"
+    vars:
+      gateway: "{{cp_secondary_backend}}"
