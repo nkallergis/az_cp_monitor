@@ -40,6 +40,27 @@
       address_prefix: "{{item.prefix}}"
       next_hop_type: "vnet_local"
 
+  - name: Create UDR routes (monitor)
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{item.name}}-udr"
+      name: "{{item.name}}-monitor"
+      address_prefix: "{{monitor_subnet}}"
+      next_hop_type: "vnet_local"
+
+  - name: Create UDR routes (target)
+    run_once: True
+    loop: "{{vnet.subnets}}"
+    azure_rm_route:
+      resource_group: "{{customer}}-generic-rg"
+      route_table_name: "{{item.name}}-udr"
+      name: "{{item.name}}-target"
+      address_prefix: "{{target_subnet}}"
+      next_hop_type: "virtual_appliance"
+      next_hop_ip_address: "{{cp_primary_backend}}"
+
   - name: Create UDR routes (VNet)
     run_once: True
     loop: "{{vnet.subnets}}"

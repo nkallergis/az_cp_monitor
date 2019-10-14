@@ -3,6 +3,8 @@ customer: "alpha"
 location: "westeurope"
 cp_primary_backend: "10.118.6.4"
 cp_secondary_backend: "10.118.6.5"
+monitor_subnet: "10.118.254.0/24"
+target_subnet: "10.118.250.0/24"
 vnet:
   prefix: "10.118.0.0/16"
   subnets:
