@@ -1,6 +1,6 @@
 ---
 - name: Check Point "HA" monitoring in Azure Stack
-  hosts: subnets
+  hosts: all
   gather_facts: False
   vars: 
     target:

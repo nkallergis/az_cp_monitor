@@ -1,0 +1,33 @@
+---
+- name: Get subnets list for VNet
+  hosts: localhost
+  gather_facts: False
+  vars:
+    subnets_inventory: "subnets.ini"
+    low_limit: 6
+    high_limit: 250
+  tasks:
+  - name: Get list of non-infra subnets
+    azure_rm_virtualnetwork_facts:
+      resource_group: "{{customer}}-generic-rg"
+      name: "{{customer}}-vnet"
+    register: output
+
+  - name: Clear "subnets.ini" contents
+    file:
+      path: "{{subnets_inventory}}"
+      state: absent
+  - file:
+      path: "{{subnets_inventory}}"
+      state: touch
+
+  - name: Populate "subnets.ini" with non-infra subnets' names
+    loop: "{{output.virtualnetworks[0].subnets}}"
+    when:
+      - item.address_prefix.split('.')[2] | int > low_limit
+      - item.address_prefix.split('.')[2] | int < high_limit
+    lineinfile:
+        path: "{{subnets_inventory}}"
+        create: yes
+        # regexp: undefined # not required. The regular expression to look for in every line of the file. For C(state=present), the pattern to replace if found. Only the last line found will be replaced. For C(state=absent), the pattern of the line(s) to remove. Uses Python regular expressions. See U(http://docs.python.org/2/library/re.html).
+        line: "{{item.name}}"
