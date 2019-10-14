@@ -14,3 +14,5 @@ vnet:
       prefix: "10.118.9.0/24"
     - name: "lalala"
       prefix: "10.118.10.0/24"
+    - name: "lololo"
+      prefix: "10.118.11.0/24"
